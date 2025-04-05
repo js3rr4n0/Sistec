@@ -1,7 +1,175 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Http\Controllers\CaseController;
 
+// Página de inicio
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 });
+
+// Página de login
+Route::get('/login', function () {
+    return view('login');
+})->name('login');
+
+// Procesa el formulario de login
+Route::post('/login', function (Request $request) {
+    $user = DB::table('users')->where('email', $request->email)->first();
+
+    if ($user && $user->password === $request->password) {
+        session([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_email' => $user->email
+        ]);
+        return redirect('/dashboard');
+    }
+
+    return back()->withErrors([
+        'email' => 'Credenciales incorrectas',
+    ]);
+})->name('login.process');
+
+// Registro de nuevo admin/técnico
+Route::get('/register', function () {
+    return view('register');
+})->name('register');
+
+Route::post('/register', function (Request $request) {
+    $request->validate([
+        'name' => 'required|string|max:100',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:4',
+        'especialidad' => 'required|string|max:100',
+    ]);
+
+    $userId = DB::table('users')->insertGetId([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => $request->password,
+        'created_at' => now(),
+        'updated_at' => now()
+    ]);
+
+    DB::table('Tecnico')->insert([
+        'Id' => uniqid(),
+        'Nombre' => $request->name,
+        'Especialidad' => $request->especialidad,
+        'Email' => $request->email,
+        'UserId' => $userId
+    ]);
+
+    session([
+        'user_id' => $userId,
+        'user_name' => $request->name,
+        'user_email' => $request->email
+    ]);
+
+    return redirect('/dashboard');
+})->name('register.process');
+
+// Dashboard protegido
+Route::get('/dashboard', function () {
+    if (!session()->has('user_id')) {
+        return redirect('/login');
+    }
+
+    $userName = session('user_name');
+    $userEmail = session('user_email');
+
+    $tecnico = DB::table('Tecnico')->where('Email', $userEmail)->first();
+
+    if (!$tecnico) {
+        return abort(403, 'No autorizado');
+    }
+
+    // Datos dinámicos
+    $totalCases = DB::table('casosoporte')->count();
+    $activeCases = $totalCases;
+    $criticalCases = DB::table('casosoporte')->where('Prioridad', 'High')->count();
+    $completedCases = 0;
+
+    $totalItems = DB::table('Componente')->count();
+    $lowStock = DB::table('Componente')->where('Stock', '<', 10)->count();
+    $onOrder = DB::table('MovimientoInventario')->where('TipoMovimiento', 'Orden')->count();
+    $inventoryValue = DB::table('Componente')->sum(DB::raw('Stock * 100'));
+
+    $reports = 24;
+    $insights = 15;
+    $trends = 8;
+    $alerts = 5;
+
+    $recommendations = 18;
+    $pending = 7;
+    $implemented = 11;
+    $savings = 45000;
+
+    return view('dashboard', compact(
+        'userName',
+        'totalCases', 'activeCases', 'criticalCases', 'completedCases',
+        'totalItems', 'lowStock', 'onOrder', 'inventoryValue',
+        'reports', 'insights', 'trends', 'alerts',
+        'recommendations', 'pending', 'implemented', 'savings'
+    ));
+})->name('dashboard');
+
+// Logout
+Route::post('/logout', function () {
+    session()->flush();
+    return redirect('/');
+})->name('logout');
+
+// FORMULARIO: Crear nuevo caso de soporte
+Route::get('/cases/create', function () {
+    return view('create_case');
+})->name('cases.create');
+
+// GUARDAR: Insertar el caso con cliente y técnico
+Route::post('/cases/store', function (Request $request) {
+    if (!session()->has('user_id')) {
+        return redirect('/login');
+    }
+
+    $tecnico = DB::table('tecnico')->where('UserId', session('user_id'))->first();
+
+    if (!$tecnico) {
+        return abort(403, 'No autorizado');
+    }
+
+    // Crear cliente
+    $clienteId = (string) Str::uuid();
+    DB::table('cliente')->insert([
+        'Id' => $clienteId,
+        'Nombre' => $request->contactname,
+        'Email' => $request->email,
+        'Telefono' => $request->telefono
+    ]);
+
+    // Crear caso de soporte
+    DB::table('casosoporte')->insert([
+        'Id' => (string) Str::uuid(),
+        'ClienteId' => $clienteId,
+        'TecnicoId' => $tecnico->Id,
+        'Titulo' => $request->titulo,
+        'Descripcion' => $request->descripcion,
+        'Prioridad' => $request->prioridad,
+        'Categoria' => $request->categoria,
+        'TipoDispositivo' => $request->tipodispositivo,
+        'SerialNumber' => $request->serialnumber,
+        'FechaCompra' => $request->fechacompra,
+        'Sintomas' => $request->sintomas,
+        'MetodoContacto' => $request->metodocontacto,
+        'NotasAdicionales' => $request->notasadicionales,
+        'RelacionConCasoPrevio' => $request->has('relacioncasoprevio') ? 1 : 0,
+        'FechaSolicitud' => now()
+    ]);
+
+    return redirect()->route('cases.index')->with('success', 'Caso de soporte creado correctamente.');
+})->name('cases.store');
+
+// VISTA: Lista de casos de soporte
+Route::get('/cases', [CaseController::class, 'index'])->name('cases.index');
