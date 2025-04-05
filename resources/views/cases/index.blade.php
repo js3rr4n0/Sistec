@@ -124,7 +124,11 @@
             <tbody>
                 @foreach ($cases as $case)
                 <tr>
-                    <td>{{ $case->Titulo }}</td>
+                <td>
+    <a href="{{ route('cases.show', $case->Id) }}" style="text-decoration: none; color: #2a5bff;">
+        {{ $case->Titulo }}
+    </a>
+</td>
                     <td>{{ $case->cliente_nombre ?? 'Sin cliente' }}</td>
                     <td>{{ $case->tecnico_nombre ?? 'Unassigned' }}</td>
                     <td>{{ $case->Prioridad }}</td>

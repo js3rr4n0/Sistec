@@ -87,11 +87,10 @@ Route::get('/dashboard', function () {
         return abort(403, 'No autorizado');
     }
 
-    // Datos dinámicos
     $totalCases = DB::table('casosoporte')->count();
-    $activeCases = $totalCases;
+    $completedCases = DB::table('seguimientocaso')->where('Estado', 'Finalizado')->count();
+    $activeCases = $totalCases - $completedCases;
     $criticalCases = DB::table('casosoporte')->where('Prioridad', 'High')->count();
-    $completedCases = 0;
 
     $totalItems = DB::table('Componente')->count();
     $lowStock = DB::table('Componente')->where('Stock', '<', 10)->count();
@@ -123,24 +122,17 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-// FORMULARIO: Crear nuevo caso de soporte
+// Crear nuevo caso
 Route::get('/cases/create', function () {
     return view('create_case');
 })->name('cases.create');
 
-// GUARDAR: Insertar el caso con cliente y técnico
 Route::post('/cases/store', function (Request $request) {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
+    if (!session()->has('user_id')) return redirect('/login');
 
     $tecnico = DB::table('tecnico')->where('UserId', session('user_id'))->first();
+    if (!$tecnico) return abort(403, 'No autorizado');
 
-    if (!$tecnico) {
-        return abort(403, 'No autorizado');
-    }
-
-    // Crear cliente
     $clienteId = (string) Str::uuid();
     DB::table('cliente')->insert([
         'Id' => $clienteId,
@@ -149,7 +141,6 @@ Route::post('/cases/store', function (Request $request) {
         'Telefono' => $request->telefono
     ]);
 
-    // Crear caso de soporte
     DB::table('casosoporte')->insert([
         'Id' => (string) Str::uuid(),
         'ClienteId' => $clienteId,
@@ -171,5 +162,10 @@ Route::post('/cases/store', function (Request $request) {
     return redirect()->route('cases.index')->with('success', 'Caso de soporte creado correctamente.');
 })->name('cases.store');
 
-// VISTA: Lista de casos de soporte
+// Listado, asignación y detalle de casos
+Route::get('/cases/assign', [CaseController::class, 'assignView'])->name('cases.assign');
+Route::post('/cases/assign/save', [CaseController::class, 'bulkAssign'])->name('cases.assign.save');
 Route::get('/cases', [CaseController::class, 'index'])->name('cases.index');
+Route::get('/cases/{id}', [CaseController::class, 'show'])->name('cases.show');
+Route::post('/cases/{id}/update', [CaseController::class, 'update'])->name('cases.update');
+Route::post('/cases/assign/bulk', [CaseController::class, 'bulkAssign'])->name('cases.assign.bulk');
