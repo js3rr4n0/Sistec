@@ -105,7 +105,7 @@ class CaseController extends Controller
         $cases = DB::table('casosoporte')
             ->leftJoin('tecnico', 'casosoporte.TecnicoId', '=', 'tecnico.Id')
             ->select('casosoporte.*', 'tecnico.Nombre as tecnico_nombre')
-            ->get();
+            ->paginate(20);
 
         $tecnicos = DB::table('tecnico')->get();
 

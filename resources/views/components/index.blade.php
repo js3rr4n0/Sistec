@@ -72,12 +72,19 @@
             margin-bottom: 1rem;
             display: inline-block;
         }
+
+        .btn-small {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            margin-left: 1rem;
+        }
     </style>
 </head>
 <body>
 <div style="margin-top: 1rem;">
-        <a href="{{ route('dashboard') }}" style="text-decoration:none; color:#2a5bff;">← Back to Dashboard</a>
-    </div>
+    <a href="{{ route('dashboard') }}" style="text-decoration:none; color:#2a5bff;">← Back to Dashboard</a>
+</div>
+
 <div class="container">
     <h2>Component Inventory</h2>
 
@@ -95,7 +102,7 @@
 
     <div class="summary-box">
         <div class="summary-item">📦 Total Items: {{ $totalItems }}</div>
-        <div class="summary-item">💰 Total Value: ${{ number_format($totalValue/ 2, 2) }}</div>
+        <div class="summary-item">💰 Total Value: ${{ number_format($totalValue / 2, 2) }}</div>
         <div class="summary-item">⚠ Stock Bajo: {{ $lowStockCount }}</div>
     </div>
 
@@ -123,30 +130,39 @@
 
     <table>
         <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Stock</th>
-            <th>Min. Stock</th>
-            <th>Location</th>
-            <th>Description</th>
-        </tr>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Stock</th>
+                <th>Min. Stock</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Acción</th>
+            </tr>
         </thead>
         <tbody>
-        @forelse($components as $component)
-            <tr @if($component->Stock < ($component->stock_minimo ?? 10)) class="low-stock" @endif>
-                <td>{{ $component->Nombre }}</td>
-                <td>{{ $component->Tipo }}</td>
-                <td>{{ $component->Stock }}</td>
-                <td>{{ $component->stock_minimo ?? 'N/A' }}</td>
-                <td>{{ $component->ubicacion ?? '—' }}</td>
-                <td>{{ $component->descripcion ?? '—' }}</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="6">No se encontraron resultados</td>
-            </tr>
-        @endforelse
+            @forelse($components as $component)
+                <tr @if($component->Stock < ($component->stock_minimo ?? 10)) class="low-stock" @endif>
+                    <td>{{ $component->Nombre }}</td>
+                    <td>{{ $component->Tipo }}</td>
+                    <td>{{ $component->Stock }}</td>
+                    <td>{{ $component->stock_minimo ?? 'N/A' }}</td>
+                    <td>{{ $component->ubicacion ?? '—' }}</td>
+                    <td>{{ $component->descripcion ?? '—' }}</td>
+                    <td>
+                        @if($component->Stock < ($component->stock_minimo ?? 10))
+                            <a href="{{ route('movimientos.registro') }}" class="btn btn-small">Ordenar Más</a>
+                            
+                        @else
+                            —
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7">No se encontraron resultados</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 </div>

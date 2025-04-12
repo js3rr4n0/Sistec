@@ -30,16 +30,16 @@
             border-bottom: 1px solid #ccc;
             text-align: left;
         }
-        select, button {
-            padding: 0.4rem;
-            border-radius: 5px;
+        select {
+            padding: 0.35rem;
+            border-radius: 4px;
             border: 1px solid #ccc;
         }
         .btn {
             background-color: #2a5bff;
             color: white;
             font-weight: bold;
-            padding: 0.4rem 1rem;
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -47,6 +47,48 @@
         .message {
             color: green;
             margin-bottom: 1rem;
+        }
+
+        /* Paginación compacta */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding-left: 0;
+            gap: 0.4rem;
+            margin-top: 2rem;
+        }
+
+        .pagination li {
+            display: inline-block;
+        }
+
+        .pagination li a,
+        .pagination li span {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.55rem;
+            border: 1px solid #2a5bff;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #2a5bff;
+            background-color: #fff;
+        }
+
+        .pagination li a:hover {
+            background-color: #2a5bff;
+            color: #fff;
+        }
+
+        .pagination li.active span {
+            background-color: #2a5bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .pagination li.disabled span {
+            background-color: #eee;
+            color: #888;
+            border-color: #ccc;
         }
     </style>
 </head>
@@ -77,7 +119,9 @@
                             <select name="assignments[{{ $case->Id }}]">
                                 <option value="">-- Select Technician --</option>
                                 @foreach ($tecnicos as $tec)
-                                    <option value="{{ $tec->Id }}" {{ $case->TecnicoId === $tec->Id ? 'selected' : '' }}>{{ $tec->Nombre }}</option>
+                                    <option value="{{ $tec->Id }}" {{ $case->TecnicoId === $tec->Id ? 'selected' : '' }}>
+                                        {{ $tec->Nombre }}
+                                    </option>
                                 @endforeach
                             </select>
                         </td>
@@ -88,6 +132,11 @@
 
         <button class="btn" type="submit">Save Assignments</button>
     </form>
+
+    {{-- Paginación --}}
+    <div>
+        {{ $cases->links('pagination::default') }}
+    </div>
 
     <div style="margin-top: 1rem;">
         <a href="{{ route('dashboard') }}" style="text-decoration:none; color:#2a5bff;">← Back to Dashboard</a>
