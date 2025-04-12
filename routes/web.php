@@ -169,3 +169,79 @@ Route::get('/cases', [CaseController::class, 'index'])->name('cases.index');
 Route::get('/cases/{id}', [CaseController::class, 'show'])->name('cases.show');
 Route::post('/cases/{id}/update', [CaseController::class, 'update'])->name('cases.update');
 Route::post('/cases/assign/bulk', [CaseController::class, 'bulkAssign'])->name('cases.assign.bulk');
+Route::get('/components', function () {
+    $components = DB::table('componente')
+        ->select('Id', 'Nombre', 'Tipo', 'Stock', 'stock_minimo', 'descripcion', 'ubicacion')
+        ->orderBy('Nombre')
+        ->get();
+
+    return view('components.index', compact('components'));
+})->name('components.index');
+
+// Formulario para crear componente
+Route::get('/components/create', function () {
+    return view('components.create');
+})->name('components.create');
+
+// Almacenar nuevo componente
+Route::post('/components/store', function (Request $request) {
+    DB::table('componente')->insert([
+        'Id' => (string) Str::uuid(),
+        'Nombre' => $request->nombre,
+        'Tipo' => $request->tipo,
+        'Stock' => $request->stock,
+        'stock_minimo' => $request->stock_minimo ?? 10,
+        'descripcion' => $request->descripcion,
+        'ubicacion' => $request->ubicacion,
+        'notas' => $request->notas,
+        'precio' => $request->precio ?? 0,
+    ]);
+
+    return redirect()->route('components.index')->with('success', 'Componente añadido.');
+})->name('components.store');
+// Formulario de movimientos
+Route::get('/movimientos/inventario', function () {
+    $componentes = DB::table('componente')->get();
+    return view('components.movimiento', compact('componentes'));
+})->name('movimientos.form');
+
+// Procesar entrada o salida
+Route::post('/movimientos/inventario', function (Request $request) {
+    $request->validate([
+        'componente_id' => 'required',
+        'tipo_movimiento' => 'required|in:entrada,salida',
+        'cantidad' => 'required|integer|min:1',
+        'notas' => 'nullable|string'
+    ]);
+
+    $componente = DB::table('componente')->where('Id', $request->componente_id)->first();
+
+    if (!$componente) {
+        return back()->withErrors(['componente_id' => 'Componente no encontrado.']);
+    }
+
+    if ($request->tipo_movimiento === 'salida' && $request->cantidad > $componente->Stock) {
+        return back()->withErrors(['cantidad' => 'No puedes retirar más de lo disponible. Stock actual: ' . $componente->Stock]);
+    }
+
+    // Ajustar stock
+    $nuevoStock = $request->tipo_movimiento === 'entrada'
+        ? $componente->Stock + $request->cantidad
+        : $componente->Stock - $request->cantidad;
+
+    DB::table('componente')->where('Id', $request->componente_id)->update([
+        'Stock' => $nuevoStock
+    ]);
+
+    // Registrar movimiento
+    DB::table('movimiento_inventario')->insert([
+        'Id' => (string) Str::uuid(),
+        'ComponenteId' => $request->componente_id,
+        'TipoMovimiento' => $request->tipo_movimiento,
+        'Cantidad' => $request->cantidad,
+        'Notas' => $request->notas,
+        'FechaMovimiento' => now()
+    ]);
+
+    return redirect()->route('components.index')->with('success', 'Movimiento registrado correctamente.');
+})->name('movimientos.store');

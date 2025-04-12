@@ -130,9 +130,9 @@
                 <div>Value: ${{ number_format($inventoryValue, 2) }}</div>
             </div>
             <div class="btn-group">
-                <button>Add Component</button>
-                <button>Check Stock</button>
-                <button>Order Parts</button>
+            <a href="{{ route('components.create') }}">Add Component</a>
+            <a href="{{ route('components.index') }}">Check Stock</a>
+            <a href="{{ route('movimientos.form') }}" class="btn">Inventory Movement</a>
                 <button>View History</button>
             </div>
         </div>
