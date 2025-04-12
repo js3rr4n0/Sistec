@@ -245,3 +245,62 @@ Route::post('/movimientos/inventario', function (Request $request) {
 
     return redirect()->route('components.index')->with('success', 'Movimiento registrado correctamente.');
 })->name('movimientos.store');
+// Nueva ruta para ver y registrar movimientos
+Route::get('/movimientos/registro', function (Request $request) {
+    $componentes = DB::table('componente')->get();
+
+    $movimientos = DB::table('movimiento_inventario')
+        ->join('componente', 'movimiento_inventario.ComponenteId', '=', 'componente.Id')
+        ->when($request->buscar, function ($query) use ($request) {
+            return $query->where('componente.Nombre', 'like', '%' . $request->buscar . '%');
+        })
+        ->when($request->tipo, function ($query) use ($request) {
+            return $query->where('movimiento_inventario.TipoMovimiento', $request->tipo);
+        })
+        ->select('movimiento_inventario.*', 'componente.Nombre')
+        ->orderBy('FechaMovimiento', 'desc')
+        ->get();
+
+    return view('movements.registro', compact('componentes', 'movimientos'));
+})->name('movimientos.registro');
+Route::get('/components', function (Request $request) {
+    $query = DB::table('componente');
+
+    if ($request->nombre) {
+        $query->where('Nombre', 'LIKE', '%' . $request->nombre . '%');
+    }
+
+    if ($request->tipo) {
+        $query->where('Tipo', $request->tipo);
+    }
+
+    if ($request->stock === 'low') {
+        $query->where('Stock', '<', 10);
+    } elseif ($request->stock === 'normal') {
+        $query->where('Stock', '>=', 10);
+    }
+
+    $components = $query->orderBy('Nombre')->get();
+    $types = DB::table('componente')->select('Tipo')->distinct()->pluck('Tipo');
+
+    return view('components.index', compact('components', 'types'));
+})->name('components.index');
+Route::get('/cases/reportes', [CaseController::class, 'reportesFallas'])->name('cases.reportes');
+Route::get('/cases/reportes', [CaseController::class, 'reportes'])->name('cases.reportes');
+use App\Http\Controllers\ReporteController;
+
+Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+Route::get('/reportes/componentes', [InventoryReportController::class, 'componentesDemanda'])->name('componentes.reporte');
+Route::get('/reportes/componentes', [InventoryReportController::class, 'componentesDemanda'])->name('componentes.reporte');
+use App\Http\Controllers\InventoryReportController;
+
+
+Route::get('/reportes/componentes', [InventoryReportController::class, 'componentesDemanda'])->name('componentes.reporte');
+Route::get('/componentes/sugerencias', [App\Http\Controllers\ComponentController::class, 'sugerencias'])->name('components.sugerencias');
+Route::get('/componentes/sugerencias', [ComponentController::class, 'sugerencias'])->name('componentes.sugerencias');
+use App\Http\Controllers\ComponentController;
+
+Route::get('/componentes/sugerencias', [ComponentController::class, 'sugerencias'])->name('componentes.sugerencias');
+
+
+Route::get('/componentes/sugerencias', [ComponentController::class, 'sugerencias'])->name('componentes.sugerencias');

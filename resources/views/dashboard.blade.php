@@ -28,11 +28,12 @@
             font-size: 1rem;
         }
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
         .card {
             background-color: #fff;
             padding: 1.5rem;
@@ -116,7 +117,7 @@
                 <a href="{{ route('cases.create') }}">Create Case</a>
                 <a href="{{ route('cases.index') }}">View Cases</a>
                 <a href="{{ route('cases.assign') }}">Assign Technician</a>
-                <button>Case Analytics</button>
+                
             </div>
         </div>
 
@@ -126,31 +127,29 @@
             <div class="stats">
                 <div>Total Items: {{ $totalItems }}</div>
                 <div>Low Stock: {{ $lowStock }}</div>
-                <div>On Order: {{ $onOrder }}</div>
-                <div>Value: ${{ number_format($inventoryValue, 2) }}</div>
+               
+                <div>Value: ${{ number_format($inventoryValue / 2, 2) }}</div>
+
             </div>
             <div class="btn-group">
             <a href="{{ route('components.create') }}">Add Component</a>
             <a href="{{ route('components.index') }}">Check Stock</a>
-            <a href="{{ route('movimientos.form') }}" class="btn">Inventory Movement</a>
-                <button>View History</button>
+            <a href="{{ route('movimientos.registro') }}" class="btn">Inventory Movement</a>
+
+               
             </div>
         </div>
 
         <div class="card">
             <h3>Reports & Statistics</h3>
             <p>Analytics, trends, and performance metrics</p>
-            <div class="stats">
-                <div>Reports: {{ $reports }}</div>
-                <div>Insights: {{ $insights }}</div>
-                <div>Trends: {{ $trends }}</div>
-                <div>Alerts: {{ $alerts }}</div>
-            </div>
+           
             <div class="btn-group">
-                <button>Generate Report</button>
-                <button>View Trends</button>
-                <button>Export Data</button>
-                <button>Custom Analysis</button>
+            <a href="{{ route('reportes.index') }}">📊 Ver Reportes de Fallas</a>
+            <a href="{{ route('componentes.reporte') }}">Reporte de Componentes</a>
+
+
+              
             </div>
         </div>
 
@@ -158,16 +157,12 @@
             <h3>Decision Support</h3>
             <p>Resource optimization and procurement strategies</p>
             <div class="stats">
-                <div>Recs: {{ $recommendations }}</div>
-                <div>Pending: {{ $pending }}</div>
-                <div>Impl: {{ $implemented }}</div>
-                <div>Savings: ${{ number_format($savings, 2) }}</div>
+                
             </div>
             <div class="btn-group">
-                <button>View Insights</button>
-                <button>Resource Planning</button>
-                <button>Cost Analysis</button>
-                <button>Optimization</button>
+            <a href="{{ route('componentes.sugerencias') }}" class="btn">📦 Sugerencias de Compra</a>
+
+
             </div>
         </div>
     </div>

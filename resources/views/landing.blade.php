@@ -98,10 +98,7 @@
         </div>
 
         <nav>
-            <a href="#">Home</a>
-            <a href="#">Services</a>
-            <a href="#">Support</a>
-            <a href="#">Contact</a>
+           
         </nav>
         <a href="{{ route('login') }}" class="btn">Sign In</a>
     </header>

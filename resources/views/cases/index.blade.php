@@ -1,3 +1,4 @@
+<!-- resources/views/cases/index.blade.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,11 +63,24 @@
             margin-top: 1rem;
             display: flex;
             gap: 1rem;
+            padding: 0 2rem;
         }
         select, input[type="text"] {
             padding: 0.5rem;
             border: 1px solid #ccc;
             border-radius: 5px;
+        }
+        .priority-low {
+            color: green;
+            font-weight: bold;
+        }
+        .priority-medium {
+            color: orange;
+            font-weight: bold;
+        }
+        .priority-high {
+            color: red;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -81,63 +95,77 @@
     </div>
 </header>
 
-
-    <div class="topbar">
-        <div class="stats">
-            <div class="stat-box">
-                <div>Total Cases</div>
-                <strong>{{ $total }}</strong>
-            </div>
-            <div class="stat-box">
-                <div>In Progress</div>
-                <strong>{{ $inProgress }}</strong>
-            </div>
-            <div class="stat-box">
-                <div>Critical Cases</div>
-                <strong>{{ $critical }}</strong>
-            </div>
-            <div class="stat-box">
-                <div>Completed</div>
-                <strong>{{ $completed }}</strong>
-            </div>
+<div class="topbar">
+    <div class="stats">
+        <div class="stat-box">
+            <div>Total Cases</div>
+            <strong>{{ $total }}</strong>
+        </div>
+        <div class="stat-box">
+            <div>In Progress</div>
+            <strong>{{ $inProgress }}</strong>
+        </div>
+        <div class="stat-box">
+            <div>Critical Cases</div>
+            <strong>{{ $critical }}</strong>
+        </div>
+        <div class="stat-box">
+            <div>Completed</div>
+            <strong>{{ $completed }}</strong>
         </div>
     </div>
+</div>
 
-    <div class="container">
-        <div class="filters">
-            <input type="text" placeholder="Search cases...">
-            <select><option>All Status</option></select>
-            <select><option>All Priority</option></select>
-            <select><option>All Categories</option></select>
-        </div>
+<div class="container">
+    <form class="filters" method="GET" action="{{ route('cases.index') }}">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search case title...">
+        <select name="prioridad">
+            <option value="">All Priorities</option>
+            <option value="Low" {{ request('prioridad') === 'Low' ? 'selected' : '' }}>Low</option>
+            <option value="Medium" {{ request('prioridad') === 'Medium' ? 'selected' : '' }}>Medium</option>
+            <option value="High" {{ request('prioridad') === 'High' ? 'selected' : '' }}>High</option>
+        </select>
+        <button type="submit" class="btn">Filter</button>
+    </form>
 
-        <table>
-            <thead>
+    <table>
+        <thead>
+            <tr>
+                <th>Case Details</th>
+                <th>Customer</th>
+                <th>Assigned To</th>
+                <th>Priority</th>
+                <th>Last Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($cases as $case)
                 <tr>
-                    <th>Case Details</th>
-                    <th>Customer</th>
-                    <th>Assigned To</th>
-                    <th>Status</th>
-                    <th>Last Update</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($cases as $case)
-                <tr>
-                <td>
-    <a href="{{ route('cases.show', $case->Id) }}" style="text-decoration: none; color: #2a5bff;">
-        {{ $case->Titulo }}
-    </a>
-</td>
+                    <td>
+                        <a href="{{ route('cases.show', $case->Id) }}" style="text-decoration: none; color: #2a5bff;">
+                            {{ $case->Titulo }}
+                        </a>
+                    </td>
                     <td>{{ $case->cliente_nombre ?? 'Sin cliente' }}</td>
                     <td>{{ $case->tecnico_nombre ?? 'Unassigned' }}</td>
-                    <td>{{ $case->Prioridad }}</td>
+                    <td>
+                        <span class="
+                            {{ $case->Prioridad === 'High' ? 'priority-high' : '' }}
+                            {{ $case->Prioridad === 'Medium' ? 'priority-medium' : '' }}
+                            {{ $case->Prioridad === 'Low' ? 'priority-low' : '' }}
+                        ">
+                            {{ $case->Prioridad ?? 'N/A' }}
+                        </span>
+                    </td>
                     <td>{{ \Carbon\Carbon::parse($case->FechaSolicitud)->format('Y-m-d') }}</td>
                 </tr>
-                @endforeach
-            </tbody>
-            
-        </table>
-    </div>
+            @empty
+                <tr>
+                    <td colspan="5">No cases found.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 </body>
 </html>
