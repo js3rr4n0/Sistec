@@ -34,9 +34,4 @@
 
 - **Administrador**: Accede a todos los módulos del sistema (casos, inventario, reportes, usuarios).
 - **Técnico**: Visualiza y actualiza casos asignados.
-- **Cliente** (opcional): Puede registrar solicitudes de servicio.
-
----
-
-## 📂 Estructura de Carpetas Relevantes
 
